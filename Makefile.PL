@@ -18,8 +18,11 @@ WriteMakefile(
         'Test::More' => 0,
     },
     PREREQ_PM => {
-        #'ABC'              => 1.6,
-        #'Foo::Bar::Module' => 5.0401,
+        'HTTP::Tiny'                => '0.016',
+        'Tie::DataUUID'             => '1.02',
+        'URI'                       => '1.60',
+        'XML::Fast'                 => '0.11',
+        'XML::Spice'                => '0.03',
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'Net-DAVTalk-*' },
