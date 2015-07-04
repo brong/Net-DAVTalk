@@ -12,6 +12,7 @@ use Net::DAVTalk::XMLParser;
 use MIME::Base64 qw(encode_base64);
 use Encode qw(encode_utf8 decode_utf8);
 use URI::Escape qw(uri_unescape);
+use URI;
 
 =head1 NAME
 
@@ -189,8 +190,7 @@ sub Request {
     agent => "Net-DAVTalk/0.01",
   );
 
-  $Headers{'Content-Type'} //= 'application/xml';
-  $Headers{Host} //= $Self->{host};
+  $Headers{'Content-Type'} //= 'application/xml; charset=utf-8';
 
   if ($Self->{user}) {
     $Headers{'Authorization'} = $Self->auth_header();
@@ -222,15 +222,15 @@ sub Request {
   }
 
   if ($Response->{status} == 301 or $Response->{status} == 302) {
+    my $location = URI->new_abs($Response->{headers}{location}, $URI);
     if ($ENV{DEBUGDAV}) {
-      warn "******** REDIRECT $Response->{status} to $Response->{headers}{location}\n";
+      warn "******** REDIRECT $Response->{status} to $location\n";
     }
-
     $OldAlarm = alarm 60;
     eval {
       local $SIG{ALRM} = sub { die 'timed out' };
 
-      $Response = $Self->{ua}->request($Method, $Response->{headers}{location}, {
+      $Response = $Self->{ua}->request($Method, $location, {
         headers => \%Headers,
         content => $Bytes,
       });
