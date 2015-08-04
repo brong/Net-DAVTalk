@@ -19,11 +19,11 @@ Net::DAVTalk - Interface to talk to DAV servers
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 
 =head1 SYNOPSIS
@@ -64,14 +64,23 @@ Example:
 
 Options:
 
-    url: either full https?:// url, or relative base path on the server to the DAV endpoint
+    url: either full https?:// url, or relative base path on the
+    server to the DAV endpoint
 
-    host, scheme and port: alternative to using full URL.  If URL doesn't start with https? then these will be used to construct the endpoint URI.
+    host, scheme and port: alternative to using full URL.
+    If URL doesn't start with https?:// then these will be used to
+    construct the endpoint URI.
 
-    expandurl and wellknown: if these are set, then the wellknown name (caldav and carddav are both defined) will be used to resolve /.well-known/$wellknown to find the current-user-principal URI, and then THAT will be resovlved to find the $wellknown-home-set URI, which will be used as the URL for all further actions on this object.
+    expandurl and wellknown: if these are set, then the wellknown
+    name (caldav and carddav are both defined) will be used to
+    resolve /.well-known/$wellknown to find the current-user-principal
+    URI, and then THAT will be resovlved to find the $wellknown-home-set
+    URI, which will be used as the URL for all further actions on
+    this object.
 
     user and password: if these are set, perform basic authentication.
-    user and access_token: if these are set, perform Bearer (OAUTH2) authentication
+    user and access_token: if these are set, perform Bearer (OAUTH2)
+    authentication.
 
 =cut
 
@@ -159,7 +168,8 @@ endpoint, returning the response as a parsed hash.
 
    method: http method, i.e. GET, PROPFIND, MKCOL, DELETE, etc
 
-   path: relative to base url.  With a leading slash, relative to server root, i.e. "Default/", "/dav/calendars/user/foo/Default".
+   path: relative to base url.  With a leading slash, relative to
+         server root, i.e. "Default/", "/dav/calendars/user/foo/Default".
 
    content: if the method takes a body, raw bytes to send
 
@@ -420,8 +430,7 @@ sub request_url {
 
 =head2 $Self->NS()
 
-Returns a hashref of the 'xmlns:shortname' => 'full namespace' items for use in
-XML::Spice body generation, e.g.
+Returns a hashref of the 'xmlns:shortname' => 'full namespace' items for use in XML::Spice body generation, e.g.
 
     $DAVTalk->Request(
         'MKCALENDAR',
