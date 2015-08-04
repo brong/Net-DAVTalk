@@ -71,6 +71,7 @@ Options:
     expandurl and wellknown: if these are set, then the wellknown name (caldav and carddav are both defined) will be used to resolve /.well-known/$wellknown to find the current-user-principal URI, and then THAT will be resovlved to find the $wellknown-home-set URI, which will be used as the URL for all further actions on this object.
 
     user and password: if these are set, perform basic authentication.
+    user and access_token: if these are set, perform Bearer (OAUTH2) authentication
 
 =cut
 
@@ -378,7 +379,16 @@ sub genuuid {
 
 sub auth_header {
   my $Self = shift;
-  return 'Basic ' . encode_base64("$Self->{user}:$Self->{password}", '');
+
+  if ($Self->{password}) {
+    return 'Basic ' . encode_base64("$Self->{user}:$Self->{password}", '');
+  }
+
+  if ($Self->{access_token}) {
+    return "Bearer $Self->{access_token}";
+  }
+
+  croak "Need a method to authenticate user (password or access_token)";
 }
 
 sub request_url {
