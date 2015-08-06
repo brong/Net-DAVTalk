@@ -20,11 +20,11 @@ Net::DAVTalk - Interface to talk to DAV servers
 
 =head1 VERSION
 
-Version 0.02
+Version 0.03
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 
 =head1 SYNOPSIS
@@ -145,6 +145,19 @@ sub SetURL {
   return $Self->{url};
 }
 
+=head2 $Self->fullpath($shortpath)
+
+Convert from a relative path to a full path:
+
+e.g
+    my $path = $Dav->fullpath('Default');
+    ## /dav/calendars/user/foo/Default
+
+NOTE: a you can pass a non-relative full path (leading /)
+to this function and it will be returned unchanged.
+
+=cut
+
 sub fullpath {
   my $Self = shift;
   my $path = shift;
@@ -152,6 +165,22 @@ sub fullpath {
   return $path if $path =~ m{^/};
   return "$basepath/$path";
 }
+
+=head2 $Self->shortpath($fullpath)
+
+Convert from a full path to a relative path
+
+e.g
+    my $path = $Dav->fullpath('/dav/calendars/user/foo/Default');
+    ## Default
+
+NOTE: if the full path is outside the basepath of the object, it
+will be unchanged.
+
+    my $path = $Dav->fullpath('/dav/calendars/user/bar/Default');
+    ## /dav/calendars/user/bar/Default
+
+=cut
 
 sub shortpath {
   my $Self = shift;
@@ -299,6 +328,17 @@ sub Request {
   # }}}
 }
 
+=head2 $Self->GetCurrentUserPrincipal()
+=head2 $class->GetCurrentUserPrincipal(%Args)
+
+Can be called with the same args as new() as a class method, or
+on an existing object.  Either way it will use the .well-known
+URI to find the path to the current-user-principal.
+
+Returns a string with the path.
+
+=cut
+
 sub GetCurrentUserPrincipal {
   my ($Class, %Args) = @_;
 
@@ -345,6 +385,18 @@ sub GetCurrentUserPrincipal {
   croak "Error finding current user principal at '$OriginalURL'";
 }
 
+=head2 $Self->GetHomeSet
+=head2 $class->GetHomeSet(%Args)
+
+Can be called with the same args as new() as a class method, or
+on an existing object.  Either way it assumes that the created
+object has a 'url' parameter pointing at the current user principal
+URL (see GetCurrentUserPrincipal above)
+
+Returns a string with the path to the home set.
+
+=cut
+
 sub GetHomeSet {
   my ($Class, %Args) = @_;
 
@@ -382,7 +434,7 @@ sub GetHomeSet {
   croak "Error finding $HomeSet home set at '$OriginalURL'";
 }
 
-=head2 my $uuid = $Self->genuuid()
+=head2 $Self->genuuid()
 
 Helper to generate a uuid string.  Returns a UUID, e.g.
 
@@ -394,6 +446,16 @@ sub genuuid {
   my $Self = shift;
   return "$uuid";
 }
+
+=head2 $Self->auth_header()
+
+Generate the authentication header to use on requests:
+
+e.g:
+
+    $Headers{'Authorization'} = $Self->auth_header();
+
+=cut
 
 sub auth_header {
   my $Self = shift;
@@ -408,6 +470,16 @@ sub auth_header {
 
   croak "Need a method to authenticate user (password or access_token)";
 }
+
+=head2 $Self->request_url()
+
+Generate the authentication header to use on requests:
+
+e.g:
+
+    $Headers{'Authorization'} = $Self->auth_header();
+
+=cut
 
 sub request_url {
   my $Self = shift;
