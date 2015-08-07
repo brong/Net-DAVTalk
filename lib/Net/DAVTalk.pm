@@ -11,8 +11,8 @@ use XML::Spice;
 use Net::DAVTalk::XMLParser;
 use MIME::Base64 qw(encode_base64);
 use Encode qw(encode_utf8 decode_utf8);
-use URI::Escape qw(uri_unescape);
 use URI;
+use URI::Escape qw(uri_escape uri_unescape);
 
 =head1 NAME
 
@@ -488,6 +488,7 @@ sub request_url {
   my $URL = $Self->{url};
 
   if ($Path) {
+    $Path = join "/", map { uri_escape $_ } split m{/}, $Path, -1;
     if ($Path =~ m{^/}) {
       $URL =~ s{(^https?://[^/]+)(.*)}{$1$Path};
     }
