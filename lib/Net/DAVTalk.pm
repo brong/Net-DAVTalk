@@ -274,9 +274,9 @@ sub Request {
   # one is enough
 
   if ($ENV{DEBUGDAV}) {
-    warn "<<<<<<<< " . Data::Dumper::Dumper({method => $Method, uri => $URI, headers => \%Headers, content => $Bytes }) . "\n\n";
-    warn ">>>>>>>> " . Data::Dumper::Dumper($Response) . "\n\n";
-    warn Data::Dumper::Dumper($Self->{ua});
+    warn "<<<<<<<< $Method $URI HTTP/1.1\n$Bytes\n" .
+         ">>>>>>>> $Response->{protocol} $Response->{status} $Response->{reason}\n$Response->{content}\n" .
+         "========\n\n";
   }
 
   if ($Method eq 'REPORT' && $Response->{status} == 403) {
