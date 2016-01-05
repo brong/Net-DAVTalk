@@ -20,11 +20,11 @@ Net::DAVTalk - Interface to talk to DAV servers
 
 =head1 VERSION
 
-Version 0.05
+Version 0.07
 
 =cut
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 
 =head1 SYNOPSIS
@@ -273,9 +273,11 @@ sub Request {
 
   # one is enough
 
+  my $ResponseContent = $Response->{content} || '';
+
   if ($ENV{DEBUGDAV}) {
     warn "<<<<<<<< $Method $URI HTTP/1.1\n$Bytes\n" .
-         ">>>>>>>> $Response->{protocol} $Response->{status} $Response->{reason}\n$Response->{content}\n" .
+         ">>>>>>>> $Response->{protocol} $Response->{status} $Response->{reason}\n$ResponseContent\n" .
          "========\n\n";
   }
 
@@ -291,10 +293,11 @@ sub Request {
   }
 
   unless ($Response->{success}) {
-    confess "Error with $Method for $URI ($Response->{status}, $Response->{reason})\n\n$Bytes\n\n$Response->{content}";
+    confess("ERROR WITH REQUEST\n" .
+         "<<<<<<<< $Method $URI HTTP/1.1\n$Bytes\n" .
+         ">>>>>>>> $Response->{protocol} $Response->{status} $Response->{reason}\n$ResponseContent\n" .
+         "========\n\n");
   }
-
-  my $ResponseContent = $Response->{content} || '';
 
   if ((grep { $Method eq $_ } qw{GET DELETE}) or ($Response->{status} != 207) or (not $ResponseContent)) {
     return { content => $ResponseContent };
