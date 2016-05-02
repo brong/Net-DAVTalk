@@ -1,5 +1,8 @@
 Revision history for Net-DAVTalk
 
+0.09    Tue May  3 09:07 2016
+  - depend on DateTime::Format::ISO8601
+
 0.08    Mon May  2 11:43 2016
   - Obviously there have been tons of changes up until now.
   - this release includes GetProps API call and uses it
