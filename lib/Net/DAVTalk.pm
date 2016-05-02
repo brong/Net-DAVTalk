@@ -4,6 +4,8 @@ use strict;
 use warnings FATAL => 'all';
 
 use Carp;
+use DateTime::Format::ISO8601;
+use DateTime::TimeZone;
 use HTTP::Tiny;
 use JSON;
 use Tie::DataUUID qw{$uuid};
@@ -11,7 +13,6 @@ use XML::Spice;
 use Net::DAVTalk::XMLParser;
 use MIME::Base64 qw(encode_base64);
 use Encode qw(encode_utf8 decode_utf8);
-use URI;
 use URI::Escape qw(uri_escape uri_unescape);
 
 =head1 NAME
@@ -20,11 +21,11 @@ Net::DAVTalk - Interface to talk to DAV servers
 
 =head1 VERSION
 
-Version 0.07
+Version 0.08
 
 =cut
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 
 =head1 SYNOPSIS
@@ -98,6 +99,7 @@ sub new {
   if (delete $Params{expandurl}) {
     # Locating Services for CalDAV and CardDAV (RFC6764)
     my $PrincipalURL = $Class->GetCurrentUserPrincipal(%Params);
+    $Params{principal} = $PrincipalURL;
 
     my $HomeSet = $Class->GetHomeSet(
       %Params,
@@ -109,6 +111,7 @@ sub new {
 
   my $Self = bless \%Params, ref($Class) || $Class;
   $Self->SetURL($Params{url});
+  $Self->SetPrincipalURL($Params{principal});
   $Self->ns(D => 'DAV:');
 
   return $Self;
@@ -143,6 +146,18 @@ sub SetURL {
   $Self->{url} = "$Self->{scheme}://$Self->{host}:$Self->{port}$Self->{basepath}";
 
   return $Self->{url};
+}
+
+=head2 $Self->SetPrincipalURL($url)
+
+Set the URL to the DAV Principal
+
+=cut
+
+sub SetPrincipalURL {
+  my ($Self, $PrincipalURL) = @_;
+
+  return $Self->{principal} = $PrincipalURL;
 }
 
 =head2 $Self->fullpath($shortpath)
@@ -331,6 +346,58 @@ sub Request {
   # }}}
 }
 
+=head2 $Self->GetProps($Path, @Props)
+
+perform a propfind on a particular path and get the properties back
+
+=cut
+
+sub GetProps {
+  my ($Self, $Path, @Props) = @_;
+
+  # Fetch one or more properties.
+  #  Use [ 'prop', 'sub', 'item' ] to dig into result structure
+
+  my $NS_D = $Self->ns('D');
+
+  my $Response = $Self->Request(
+    'PROPFIND',
+    $Path,
+    x('D:propfind', $Self->NS(),
+      x('D:prop',
+        map { ref $_ ? x($_->[0]): x($_) } @Props,
+      ),
+    ),
+    Depth => 0,
+  );
+
+  my @Results;
+  foreach my $Response (@{$Response->{"{$NS_D}response"} || []}) {
+    foreach my $Propstat (@{$Response->{"{$NS_D}propstat"} || []}) {
+      my $PropData = $Propstat->{"{$NS_D}prop"} || next;
+      for my $Prop (@Props) {
+        my $Result = $PropData;
+
+        # Array ref means we need to git through structure
+        for (ref $Prop ? @$Prop : $Prop) {
+          last if !$Result;
+          if (/:/) {
+            my ($N, $P) = split /:/, $_;
+            my $NS = $Self->ns($N);
+            $Result = $Result->{"{$NS}$P"};
+          } else {
+            $Result = $Result->{$_};
+          }
+        }
+        $Result = $Result ? $Result->{content} : undef;
+        push @Results, $Result;
+      }
+    }
+  }
+
+  return wantarray ? @Results : $Results[0];
+}
+
 =head2 $Self->GetCurrentUserPrincipal()
 =head2 $class->GetCurrentUserPrincipal(%Args)
 
@@ -353,7 +420,6 @@ sub GetCurrentUserPrincipal {
   my $OriginalURL = $Args{url} || '';
   my $Self        = $Class->new(%Args);
   my $NS_D        = $Self->ns('D');
-  my $NS_C        = $Self->ns('C');
   my @BasePath    = split '/', $Self->{basepath};
 
   @BasePath = ('', ".well-known/$Args{wellknown}") unless @BasePath;
@@ -361,24 +427,9 @@ sub GetCurrentUserPrincipal {
   PRINCIPAL: while(1) {
     $Self->SetURL(join '/', @BasePath);
 
-    my $Response = $Self->Request(
-      'PROPFIND',
-      '',
-      x('D:propfind', $Self->NS(),
-        x('D:prop',
-          x('D:current-user-principal'),
-        ),
-      ),
-      Depth => 0,
-    );
-
-    foreach my $Response (@{$Response->{"{$NS_D}response"} || []}) {
-      foreach my $Propstat (@{$Response->{"{$NS_D}propstat"} || []}) {
-        if (my $Principal = $Propstat->{"{$NS_D}prop"}{"{$NS_D}current-user-principal"}{"{$NS_D}href"}{content}) {
-          $Self->SetURL(uri_unescape($Principal));
-          return $Self->{url};
-        }
-      }
+    if (my $Principal = $Self->GetProps('', [ 'D:current-user-principal', 'D:href' ])) {
+      $Self->SetURL(uri_unescape($Principal));
+      return $Self->{url};
     }
 
     pop @BasePath;
@@ -414,24 +465,9 @@ sub GetHomeSet {
   my $NS_HS       = $Self->ns($Args{homesetns});
   my $HomeSet     = $Args{homeset};
 
-  my $Response = $Self->Request(
-    'PROPFIND',
-    '',
-    x('D:propfind', $Self->NS(),
-      x('D:prop',
-        x("$Args{homesetns}:$HomeSet"),
-      ),
-    ),
-    Depth => 0,
-  );
-
-  foreach my $Response (@{$Response->{"{$NS_D}response"} || []}) {
-    foreach my $Propstat (@{$Response->{"{$NS_D}propstat"} || []}) {
-      if (my $Homeset = $Propstat->{"{$NS_D}prop"}{"{$NS_HS}$HomeSet"}{"{$NS_D}href"}{content}) {
-        $Self->SetURL($Homeset);
-        return $Self->{url};
-      }
-    }
+  if (my $Homeset = $Self->GetProps('', [ "$Args{homesetns}:$HomeSet", 'D:href' ])) {
+    $Self->SetURL($Homeset);
+    return $Self->{url};
   }
 
   croak "Error finding $HomeSet home set at '$OriginalURL'";
@@ -489,6 +525,11 @@ sub request_url {
   my $Path = shift;
 
   my $URL = $Self->{url};
+
+  # If a reference, assume absolute
+  if (ref $Path) {
+    ($URL, $Path) = $$Path =~ m{(^https?://[^/]+)(.*)$};
+  }
 
   if ($Path) {
     $Path = join "/", map { uri_escape $_ } split m{/}, $Path, -1;

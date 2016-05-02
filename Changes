@@ -1,5 +1,9 @@
 Revision history for Net-DAVTalk
 
+0.08    Mon May  2 11:43 2016
+  - Obviously there have been tons of changes up until now.
+  - this release includes GetProps API call and uses it
+
 0.01    Date/time
         First version, released on an unsuspecting world.
 
