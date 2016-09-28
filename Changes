@@ -1,5 +1,8 @@
 Revision history for Net-DAVTalk
 
+0.10    Wed Sep 28 11:18 2016
+  - fix bug where URI wasn't used an redirects were needed
+
 0.09    Tue May  3 09:07 2016
   - depend on DateTime::Format::ISO8601
 
