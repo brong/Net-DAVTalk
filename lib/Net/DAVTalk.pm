@@ -14,6 +14,7 @@ use Net::DAVTalk::XMLParser;
 use MIME::Base64 qw(encode_base64);
 use Encode qw(encode_utf8 decode_utf8);
 use URI::Escape qw(uri_escape uri_unescape);
+use URI;
 
 =head1 NAME
 
