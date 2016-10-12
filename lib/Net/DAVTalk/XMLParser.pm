@@ -104,6 +104,11 @@ sub _nsexpand {
         confess "Unknown namespace $namespace" unless $expanded;
         $key = "{$expanded}$rest";
       }
+      elsif ($key =~ m/^\@/) {
+        # Attributes are never subject to the default namespace.
+        # An attribute without an explicit namespace prefix is
+        # considered not to be in any namespace.
+      }
       elsif ($ns{''}) {
         my $expanded = $ns{''};
         $key = "{$expanded}$key";
