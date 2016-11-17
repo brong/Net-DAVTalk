@@ -1,5 +1,8 @@
 Revision history for Net-DAVTalk
 
+0.12    Fri Nov 18 00:53 2016
+  - work with attributes with namespaces on them
+
 0.11    Wed Oct 12 13:52 2016
   - avoid adding default namespace to attributes
 
