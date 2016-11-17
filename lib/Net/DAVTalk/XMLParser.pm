@@ -100,6 +100,8 @@ sub _nsexpand {
       if ($pos > 0) {
         my $namespace = substr($key, 0, $pos);
         my $rest = substr($key, $pos+1);
+        # move attribute sigil from namespace to value
+        $rest = "\@$rest" if $namespace =~ s/^\@//;
         my $expanded = $ns{$namespace};
         confess "Unknown namespace $namespace" unless $expanded;
         $key = "{$expanded}$rest";
