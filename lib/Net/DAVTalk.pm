@@ -22,11 +22,11 @@ Net::DAVTalk - Interface to talk to DAV servers
 
 =head1 VERSION
 
-Version 0.13
+Version 0.14
 
 =cut
 
-our $VERSION = '0.13';
+our $VERSION = '0.14';
 
 
 =head1 SYNOPSIS
@@ -127,7 +127,7 @@ Change the endpoint URL for an existing connection.
 sub SetURL {
   my ($Self, $URL) = @_;
 
-  $URL = s{/$}{}; # remove any trailing slash
+  $URL =~ s{/$}{}; # remove any trailing slash
 
   if ($URL =~ m{^https?://}) {
     my ($HTTPS, $Hostname, $Port, $BasePath)

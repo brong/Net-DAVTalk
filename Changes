@@ -1,5 +1,8 @@
 Revision history for Net-DAVTalk
 
+0.14    Mon Mar 20 11:55 2017
+  - fix totally broken regex.  Never install version 13 of anything
+
 0.13    Mon Mar 20 11:42 2017
   - remove trailing slash from SetURL to avoid double // in fullpath
 
