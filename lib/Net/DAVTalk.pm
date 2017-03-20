@@ -127,6 +127,8 @@ Change the endpoint URL for an existing connection.
 sub SetURL {
   my ($Self, $URL) = @_;
 
+  $URL = s{/$}{}; # remove any trailing slash
+
   if ($URL =~ m{^https?://}) {
     my ($HTTPS, $Hostname, $Port, $BasePath)
       = $URL =~ m{^http(s)?://([^/:]+)(?::(\d+))?(.*)?};
