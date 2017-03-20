@@ -1,5 +1,8 @@
 Revision history for Net-DAVTalk
 
+0.13    Mon Mar 20 11:42 2017
+  - remove trailing slash from SetURL to avoid double // in fullpath
+
 0.12    Fri Nov 18 00:53 2016
   - work with attributes with namespaces on them
 
