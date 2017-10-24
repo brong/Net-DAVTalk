@@ -22,11 +22,11 @@ Net::DAVTalk - Interface to talk to DAV servers
 
 =head1 VERSION
 
-Version 0.14
+Version 0.15
 
 =cut
 
-our $VERSION = '0.14';
+our $VERSION = '0.15';
 
 
 =head1 SYNOPSIS
@@ -268,10 +268,11 @@ sub Request {
     confess "Error with $Method for $URI (504, Gateway Timeout)";
   }
 
-  if ($Response->{status} == 301 or $Response->{status} == 302) {
+  my $count = 0;
+  while ($Response->{status} =~ m{^30[1278]} and (++$count < 10)) {
     my $location = URI->new_abs($Response->{headers}{location}, $URI);
     if ($ENV{DEBUGDAV}) {
-      warn "******** REDIRECT $Response->{status} to $location\n";
+      warn "******** REDIRECT ($count) $Response->{status} to $location\n";
     }
     $OldAlarm = alarm 60;
     eval {
