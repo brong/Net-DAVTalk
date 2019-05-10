@@ -358,6 +358,19 @@ perform a propfind on a particular path and get the properties back
 
 sub GetProps {
   my ($Self, $Path, @Props) = @_;
+  my @res = $Self->GetPropsArray($Path, @Props);
+  return wantarray ? map { $_->[0] } @res : $res[0][0];
+}
+
+=head2 $Self->GetPropsArray($Path, @Props)
+
+perform a propfind on a particular path and get the properties back
+as an array of one or more items
+
+=cut
+
+sub GetPropsArray {
+  my ($Self, $Path, @Props) = @_;
 
   # Fetch one or more properties.
   #  Use [ 'prop', 'sub', 'item' ] to dig into result structure
@@ -380,21 +393,30 @@ sub GetProps {
     foreach my $Propstat (@{$Response->{"{$NS_D}propstat"} || []}) {
       my $PropData = $Propstat->{"{$NS_D}prop"} || next;
       for my $Prop (@Props) {
-        my $Result = $PropData;
+        my @Values = ($PropData);
 
         # Array ref means we need to git through structure
-        for (ref $Prop ? @$Prop : $Prop) {
-          last if !$Result;
-          if (/:/) {
-            my ($N, $P) = split /:/, $_;
-            my $NS = $Self->ns($N);
-            $Result = $Result->{"{$NS}$P"};
-          } else {
-            $Result = $Result->{$_};
+        foreach my $Key (ref $Prop ? @$Prop : $Prop) {
+          my @New;
+          foreach my $Result (@Values) {
+            if ($Key =~ m/:/) {
+              my ($N, $P) = split /:/, $Key;
+              my $NS = $Self->ns($N);
+              $Result = $Result->{"{$NS}$P"};
+            } else {
+              $Result = $Result->{$Key};
+            }
+            if (ref($Result) eq 'ARRAY') {
+              push @New, @$Result;
+            }
+            elsif (defined $Result) {
+              push @New, $Result;
+            }
           }
+          @Values = @New;
         }
-        $Result = $Result ? $Result->{content} : undef;
-        push @Results, $Result;
+
+        push @Results, [ map { $_->{content} } @Values ];
       }
     }
   }
