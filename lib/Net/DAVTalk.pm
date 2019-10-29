@@ -324,9 +324,7 @@ sub Request {
   # }}}
 
   # parse XML response {{{
-  my $Encoded = Encode::decode_utf8($ResponseContent);
-
-  my $Xml = xmlToHash($Encoded);
+  my $Xml = xmlToHash($ResponseContent);
 
   # Normalise XML
 
