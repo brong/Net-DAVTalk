@@ -118,6 +118,33 @@ sub new {
   return $Self;
 }
 
+=head2 my $ua = $Self->ua();
+=head2 $Self->ua($setua);
+
+Get or set the useragent (HTTP::Tiny or compatible) that will be used to make
+the requests:
+
+e.g.
+
+    my $ua = $Self->ua();
+
+    $Self->ua(HTTP::Tiny->new(agent => "MyAgent/1.0", timeout => 5));
+
+=cut
+
+sub ua {
+  my $Self = shift;
+  if (@_) {
+    $Self->{ua} = shift;
+  }
+  else {
+    $Self->{ua} ||= HTTP::Tiny->new(
+      agent => "Net-DAVTalk/0.01",
+    );
+  }
+  return $Self->{ua};
+}
+
 =head2 $Self->SetURL($url)
 
 Change the endpoint URL for an existing connection.
@@ -233,9 +260,7 @@ sub Request {
   $Content = '' unless defined $Content;
   my $Bytes = encode_utf8($Content);
 
-  $Self->{ua} ||= HTTP::Tiny->new(
-    agent => "Net-DAVTalk/0.01",
-  );
+  my $ua = $Self->ua();
 
   $Headers{'Content-Type'} //= 'application/xml; charset=utf-8';
 
@@ -251,7 +276,7 @@ sub Request {
 
   my $URI = $Self->request_url($Path);
 
-  my $Response = $Self->{ua}->request($Method, $URI, {
+  my $Response = $ua->request($Method, $URI, {
     headers => \%Headers,
     content => $Bytes,
   });
@@ -267,7 +292,7 @@ sub Request {
       warn "******** REDIRECT ($count) $Response->{status} to $location\n";
     }
 
-    $Response = $Self->{ua}->request($Method, $location, {
+    $Response = $ua->request($Method, $location, {
       headers => \%Headers,
       content => $Bytes,
     });
