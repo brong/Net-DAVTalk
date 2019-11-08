@@ -251,20 +251,12 @@ sub Request {
 
   my $URI = $Self->request_url($Path);
 
-  my $Response;
+  my $Response = $Self->{ua}->request($Method, $URI, {
+    headers => \%Headers,
+    content => $Bytes,
+  });
 
-  my $OldAlarm = alarm 60;
-  eval {
-    local $SIG{ALRM} = sub { die 'timed out' };
-
-    $Response = $Self->{ua}->request($Method, $URI, {
-      headers => \%Headers,
-      content => $Bytes,
-    });
-  };
-  alarm $OldAlarm;
-
-  if ($@ and $@ =~ /timed out/) {
+  if ($Response->{status} == '599' and $Response->content =~ m/timed out/i) {
     confess "Error with $Method for $URI (504, Gateway Timeout)";
   }
 
@@ -274,19 +266,14 @@ sub Request {
     if ($ENV{DEBUGDAV}) {
       warn "******** REDIRECT ($count) $Response->{status} to $location\n";
     }
-    $OldAlarm = alarm 60;
-    eval {
-      local $SIG{ALRM} = sub { die 'timed out' };
 
-      $Response = $Self->{ua}->request($Method, $location, {
-        headers => \%Headers,
-        content => $Bytes,
-      });
-    };
-    alarm $OldAlarm;
+    $Response = $Self->{ua}->request($Method, $location, {
+      headers => \%Headers,
+      content => $Bytes,
+    });
 
-    if ($@ and $@ =~ /timed out/) {
-      confess "Error with $Method for $Response->{headers}{location} (504, Gateway Timeout)";
+    if ($Response->{status} == '599' and $Response->content =~ m/timed out/i) {
+      confess "Error with $Method for $location (504, Gateway Timeout)";
     }
   }
 
