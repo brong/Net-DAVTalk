@@ -314,8 +314,7 @@ sub Request {
 
   if ($Method eq 'REPORT' && $Response->{status} == 403) {
     # maybe invalid sync token, need to return that fact
-    my $Encoded = Encode::decode_utf8($Response->{content});
-    my $Xml = xmlToHash($Encoded);
+    my $Xml = xmlToHash($ResponseContent);
     if (exists $Xml->{"{DAV:}valid-sync-token"}) {
       return {
         error => "valid-sync-token",
