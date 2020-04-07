@@ -1,7 +1,6 @@
 package Net::DAVTalk;
 
 use strict;
-use warnings FATAL => 'all';
 
 use Carp;
 use DateTime::Format::ISO8601;
