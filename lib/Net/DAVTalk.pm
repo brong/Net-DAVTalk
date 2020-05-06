@@ -279,7 +279,7 @@ sub Request {
     content => $Bytes,
   });
 
-  if ($Response->{status} == '599' and $Response->content =~ m/timed out/i) {
+  if ($Response->{status} == '599' and $Response->{content} =~ m/timed out/i) {
     confess "Error with $Method for $URI (504, Gateway Timeout)";
   }
 
@@ -295,7 +295,7 @@ sub Request {
       content => $Bytes,
     });
 
-    if ($Response->{status} == '599' and $Response->content =~ m/timed out/i) {
+    if ($Response->{status} == '599' and $Response->{content} =~ m/timed out/i) {
       confess "Error with $Method for $location (504, Gateway Timeout)";
     }
   }
