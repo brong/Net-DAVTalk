@@ -266,6 +266,10 @@ sub Request {
     $Headers{'Authorization'} = $Self->auth_header();
   }
 
+  if ($Self->{headers}) {
+      $Headers{$_} = $Self->{headers}->{$_} for ( keys %{ $Self->{headers} } );
+  }
+
   # XXX - Accept-Encoding for gzip, etc?
 
   # }}}
