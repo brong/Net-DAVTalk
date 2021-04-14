@@ -42,6 +42,7 @@ Example:
         url => "https://dav.example.com/",
         user => "foo\@example.com",
         password => "letmein",
+        headers => { Cookie => "123", Referer => "456" },
     );
 
     $davtalk->Request(
@@ -82,6 +83,8 @@ Options:
     user and password: if these are set, perform basic authentication.
     user and access_token: if these are set, perform Bearer (OAUTH2)
     authentication.
+
+    headers: a hashref of additional headers to add to every request
 
 =cut
 
