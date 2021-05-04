@@ -506,7 +506,7 @@ sub GetHomeSet {
   my $HomeSet     = $Args{homeset};
 
   if (my $Homeset = $Self->GetProps('', [ "$Args{homesetns}:$HomeSet", 'D:href' ])) {
-    $Self->SetURL($Homeset);
+    $Self->SetURL(uri_unescape($Homeset));
     return $Self->{url};
   }
 
