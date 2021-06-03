@@ -11,7 +11,7 @@ use Tie::DataUUID qw{$uuid};
 use XML::Spice;
 use Net::DAVTalk::XMLParser;
 use MIME::Base64 qw(encode_base64);
-use Encode qw(encode_utf8 decode_utf8);
+use Encode qw(encode);
 use URI::Escape qw(uri_escape uri_unescape);
 use URI;
 
@@ -259,7 +259,7 @@ sub Request {
   # setup request {{{
 
   $Content = '' unless defined $Content;
-  my $Bytes = encode_utf8($Content);
+  my $Bytes = encode('UTF-8', $Content);
 
   my $ua = $Self->ua();
 
