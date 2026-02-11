@@ -254,9 +254,25 @@ endpoint, returning the response as a parsed hash.
 
    headers: additional headers to add to request, i.e (Depth => 1)
 
+In the event of timeout or most HTTP errors, an exception will be raised.
+
+=head2 $Self->SafeRequest($method, $path, $content, %headers)
+
+  my ($Result, $Error) = $DAVTalk->SafeRequest($method, $path, $content, %headers)
+
+This is just like Request, but it won't throw an exception on most errors.
+Instead, it will return an undefined value for C<$Result>.  The C<$Error>
+return value will be a reference to a hash with two entries:
+
+  response - the underlying HTTP response from HTTP::Tiny
+  error    - a string describing the error condition
+
+The C<Request> method uses C<SafeRequest> under the hood, converting error
+results into exceptions.
+
 =cut
 
-sub Request {
+sub SafeRequest {
   my ($Self, $Method, $Path, $Content, %Headers) = @_;
 
   # setup request {{{
@@ -290,7 +306,13 @@ sub Request {
   });
 
   if ($Response->{status} == '599' and $Response->{content} =~ m/timed out/i) {
-    confess "Error with $Method for $URI (504, Gateway Timeout)";
+    return (
+      undef,
+      {
+        response => $Response,
+        error    => "Error with $Method for $URI (504, Gateway Timeout)",
+      },
+    );
   }
 
   my $count = 0;
@@ -306,7 +328,13 @@ sub Request {
     });
 
     if ($Response->{status} == '599' and $Response->{content} =~ m/timed out/i) {
-      confess "Error with $Method for $location (504, Gateway Timeout)";
+      return (
+        undef,
+        {
+          response => $Response,
+          error    => "Error with $Method for $location (504, Gateway Timeout)",
+        },
+      );
     }
   }
 
@@ -331,10 +359,16 @@ sub Request {
   }
 
   unless ($Response->{success}) {
-    confess("ERROR WITH REQUEST\n" .
-         "<<<<<<<< $Method $URI HTTP/1.1\n$Bytes\n" .
-         ">>>>>>>> $Response->{protocol} $Response->{status} $Response->{reason}\n$ResponseContent\n" .
-         "========\n\n");
+    return (
+      undef,
+      {
+        response  => $Response,
+        error     => "ERROR WITH REQUEST\n"
+         . "<<<<<<<< $Method $URI HTTP/1.1\n$Bytes\n"
+         . ">>>>>>>> $Response->{protocol} $Response->{status} $Response->{reason}\n$ResponseContent\n"
+         . "========\n\n",
+      },
+    );
   }
 
   if ((grep { $Method eq $_ } qw{GET DELETE}) or ($Response->{status} != 207) or (not $ResponseContent)) {
@@ -365,6 +399,17 @@ sub Request {
   return $Xml;
 
   # }}}
+}
+
+sub Request {
+  my ($Self, @Rest) = @_;
+  my ($Result, $Error) = $Self->SafeRequest(@Rest);
+
+  if ($Error) {
+    confess($Error->{error} // "error returned but no error message: $Error");
+  }
+
+  return $Result;
 }
 
 =head2 $Self->GetProps($Path, @Props)
