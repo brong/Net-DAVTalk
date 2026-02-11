@@ -264,9 +264,6 @@ This is mostly Request, but it won't throw an exception on most errors.
 
 Instead, it always returns a reference to a hash with these entries:
 
-will return an undefined value for C<$Result>.  The C<$Error>
-return value will be a reference to a hash with two entries:
-
   payload       - a structured representation of the DAV response, if possible;
                   this is the same thing that the ->Request method returns
   http_response - the underlying HTTP response from HTTP::Tiny
