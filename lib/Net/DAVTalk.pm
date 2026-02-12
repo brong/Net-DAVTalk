@@ -21,16 +21,16 @@ Net::DAVTalk - Interface to talk to DAV servers
 
 =head1 VERSION
 
-Version 0.23
+Version 0.24
 
 =cut
 
-our $VERSION = '0.23';
+our $VERSION = '0.24';
 
 =head1 SYNOPSIS
 
 Net::DAVTalk is was originally designed as a service module for Net::CalDAVTalk
-and Net::DAVTalk, abstracting the process of connecting to a DAV server and
+and Net::CardDAVTalk, abstracting the process of connecting to a DAV server and
 parsing the XML responses.
 
 Example:
